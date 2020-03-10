@@ -70,9 +70,8 @@ data_dummy %>%
   janitor::get_dupes(proj_id, date)
 ```
 
-### Way 2 - Dplyr
-Alternatively, same result
-```{r}
+```{r, include = FALSE}
+# Alternitavely
 data_dummy %>% 
   group_by(proj_id, date) %>% 
   filter(n() > 1) %>% 
@@ -81,17 +80,7 @@ data_dummy %>%
 
 # Aggregation
 
-## Method 1 - without prioritizing confidence
-
-This method simply chooses the maximum value of row duplicates.
-```{r}
-data_dummy %>% 
-  group_by(proj_id, date) %>% 
-  summarise_all(funs(max), na.rm = TRUE) %>% 
-  mutate_all(function(x) ifelse(x == -Inf, NA, x))
-```
-
-## Method 2 - with prioritizing confidence
+## Method 1 - with prioritizing confidence
 
 ### `priority_key`
 
@@ -117,6 +106,8 @@ data_dummy <- data_dummy %>%
 data_dummy
 ```
 
+### Aggregating the `data_dummy` dataframe
+
 1. We group the dataframe depending on our duplicate criteria `proj_id` and `date`
 2. we sort them by priority
 3. and simply chose the first non `NA` value in each group
@@ -127,3 +118,7 @@ data_dummy %>%
   summarise_all(funs(first(na.omit(.))))
 ```
 
+This results in an aggregated dataframe, where cell values are chosen
+
+1. by prioritizing the source
+2. fill in the only availyble value in a column

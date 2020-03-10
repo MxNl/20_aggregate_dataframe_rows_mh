@@ -78,54 +78,10 @@ data_dummy %>%
     ## 5 id_002  1995-04-24          2 Chlor string_4     NA        0.4      0.8
     ## # ... with 1 more variable: column_f <dbl>
 
-### Way 2 - Dplyr
-
-Alternatively, same result
-
-``` r
-data_dummy %>% 
-  group_by(proj_id, date) %>% 
-  filter(n() > 1) %>% 
-  arrange(proj_id)
-```
-
-    ## # A tibble: 5 x 8
-    ## # Groups:   proj_id, date [2]
-    ##   proj_id date       proj  column_a column_b column_c column_d column_f
-    ##   <chr>   <date>     <chr> <chr>       <dbl>    <dbl>    <dbl>    <dbl>
-    ## 1 id_001  1995-04-23 Ampel string_0      0.7     NA       NA         53
-    ## 2 id_001  1995-04-23 Dora  <NA>          0.9      1.4     NA         NA
-    ## 3 id_001  1995-04-23 Berta <NA>          7.5     10.1      3         NA
-    ## 4 id_002  1995-04-24 Berta string_1      0.3     NA        0.8       NA
-    ## 5 id_002  1995-04-24 Chlor string_4     NA        0.4      0.8       NA
-
 Aggregation
 ===========
 
-Method 1 - without prioritizing confidence
-------------------------------------------
-
-This method simply chooses the maximum value of row duplicates.
-
-``` r
-data_dummy %>% 
-  group_by(proj_id, date) %>% 
-  summarise_all(funs(max), na.rm = TRUE) %>% 
-  mutate_all(function(x) ifelse(x == -Inf, NA, x))
-```
-
-    ## # A tibble: 6 x 8
-    ## # Groups:   proj_id [5]
-    ##   proj_id  date proj     column_a column_b column_c column_d column_f
-    ##   <chr>   <dbl> <chr>    <chr>       <dbl>    <dbl>    <dbl>    <dbl>
-    ## 1 id_001   9243 Dora     string_0      7.5     10.1      3         53
-    ## 2 id_002   9244 Chlor    string_4      0.3      0.4      0.8       NA
-    ## 3 id_003   9245 Chlor    <NA>         NA       NA       NA         NA
-    ## 4 id_004   9246 Dora     string_2     NA       NA       NA         NA
-    ## 5 id_005   9243 Dora     string_3     NA       11.8     56.8       NA
-    ## 6 id_005   9247 Farfalle string_3     NA       NA       NA         NA
-
-Method 2 - with prioritizing confidence
+Method 1 - with prioritizing confidence
 ---------------------------------------
 
 ### `priority_key`
@@ -178,6 +134,8 @@ data_dummy
     ## 9 id_005  1995-04-23 Dora  string_3     NA       11.8     56.8       NA
     ## # ... with 1 more variable: priority <dbl>
 
+### Aggregating the `data_dummy` dataframe
+
 1.  We group the dataframe depending on our duplicate criteria `proj_id` and `date`
 2.  we sort them by priority
 3.  and simply chose the first non `NA` value in each group
@@ -200,3 +158,8 @@ data_dummy %>%
     ## 5 id_005  1995-04-23 Dora  string_3     NA       11.8     56.8       NA
     ## 6 id_005  1995-04-27 Farf~ string_3     NA       NA       NA         NA
     ## # ... with 1 more variable: priority <dbl>
+
+This results in an aggregated dataframe, where cell values are chosen
+
+1.  by prioritizing the source
+2.  fill in the only availyble value in a column
