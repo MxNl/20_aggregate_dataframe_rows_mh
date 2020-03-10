@@ -1,5 +1,5 @@
 ---
-title: "Unsupervised Aggregattion of Rows in large Dataframe"
+title: "Unsupervised Aggregattion of Rows in Large Dataframe"
 author: "Maximilian Nölscher"
 date: "10 März 2020"
 output: rmarkdown::github_document
@@ -38,7 +38,7 @@ library(tidyverse)
 # Data Import
 
 ```{r}
-data_dummy <- read_csv2('../../raw_data/data_dummy.csv')
+data_dummy <- read_csv2('raw_data/data_dummy.csv')
 ```
 
 Clean the column names
@@ -91,7 +91,7 @@ data_dummy %>%
   mutate_all(function(x) ifelse(x == -Inf, NA, x))
 ```
 
-## Method 1 - with prioritizing confidence
+## Method 2 - with prioritizing confidence
 
 ### `priority_key`
 

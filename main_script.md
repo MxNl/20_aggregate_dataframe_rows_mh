@@ -1,4 +1,4 @@
-Unsupervised Aggregattion of Rows in large Dataframe
+Unsupervised Aggregattion of Rows in Large Dataframe
 ================
 Maximilian Nölscher
 10 März 2020
@@ -19,7 +19,7 @@ Data Import
 ===========
 
 ``` r
-data_dummy <- read_csv2('../../raw_data/data_dummy.csv')
+data_dummy <- read_csv2('raw_data/data_dummy.csv')
 ```
 
 Clean the column names
@@ -125,7 +125,7 @@ data_dummy %>%
     ## 5 id_005   9243 Dora     string_3     NA       11.8     56.8       NA
     ## 6 id_005   9247 Farfalle string_3     NA       NA       NA         NA
 
-Method 1 - with prioritizing confidence
+Method 2 - with prioritizing confidence
 ---------------------------------------
 
 ### `priority_key`
