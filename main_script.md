@@ -3,11 +3,6 @@ Unsupervised Aggregattion of Rows in Large Dataframe
 Maximilian Nölscher
 10 März 2020
 
-``` r
-library(sf)
-library(tidyverse)
-```
-
 Libraries
 =========
 
