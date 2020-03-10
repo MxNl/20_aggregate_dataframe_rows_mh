@@ -40,10 +40,10 @@ data_dummy
     ## 3 id_003  1995-04-25 Chlor    <NA>         NA       NA       NA         NA
     ## 4 id_004  1995-04-26 Dora     string_2     NA       NA       NA         NA
     ## 5 id_005  1995-04-27 Farfalle string_3     NA       NA       NA         NA
-    ## 6 id_006  1995-04-24 Chlor    string_4     NA        0.4      0.8       NA
-    ## 7 id_007  1995-04-23 Dora     <NA>          0.9      1.4     NA         NA
-    ## 8 id_008  1995-04-23 Berta    <NA>          7.5     10.1      3         NA
-    ## 9 id_009  1995-04-23 Dora     string_3     NA       11.8     56.8       NA
+    ## 6 id_002  1995-04-24 Chlor    string_4     NA        0.4      0.8       NA
+    ## 7 id_001  1995-04-23 Dora     <NA>          0.9      1.4     NA         NA
+    ## 8 id_001  1995-04-23 Berta    <NA>          7.5     10.1      3         NA
+    ## 9 id_005  1995-04-23 Dora     string_3     NA       11.8     56.8       NA
 
 Problem Definition
 ==================
@@ -63,10 +63,15 @@ data_dummy %>%
   janitor::get_dupes(proj_id, date)
 ```
 
-    ## # A tibble: 0 x 9
-    ## # ... with 9 variables: proj_id <chr>, date <date>, dupe_count <int>,
-    ## #   proj <chr>, column_a <chr>, column_b <dbl>, column_c <dbl>,
-    ## #   column_d <dbl>, column_f <dbl>
+    ## # A tibble: 5 x 9
+    ##   proj_id date       dupe_count proj  column_a column_b column_c column_d
+    ##   <chr>   <date>          <int> <chr> <chr>       <dbl>    <dbl>    <dbl>
+    ## 1 id_001  1995-04-23          3 Ampel string_0      0.7     NA       NA  
+    ## 2 id_001  1995-04-23          3 Dora  <NA>          0.9      1.4     NA  
+    ## 3 id_001  1995-04-23          3 Berta <NA>          7.5     10.1      3  
+    ## 4 id_002  1995-04-24          2 Berta string_1      0.3     NA        0.8
+    ## 5 id_002  1995-04-24          2 Chlor string_4     NA        0.4      0.8
+    ## # ... with 1 more variable: column_f <dbl>
 
 Aggregation
 ===========
@@ -118,10 +123,10 @@ data_dummy
     ## 3 id_003  1995-04-25 Chlor <NA>         NA       NA       NA         NA
     ## 4 id_004  1995-04-26 Dora  string_2     NA       NA       NA         NA
     ## 5 id_005  1995-04-27 Farf~ string_3     NA       NA       NA         NA
-    ## 6 id_006  1995-04-24 Chlor string_4     NA        0.4      0.8       NA
-    ## 7 id_007  1995-04-23 Dora  <NA>          0.9      1.4     NA         NA
-    ## 8 id_008  1995-04-23 Berta <NA>          7.5     10.1      3         NA
-    ## 9 id_009  1995-04-23 Dora  string_3     NA       11.8     56.8       NA
+    ## 6 id_002  1995-04-24 Chlor string_4     NA        0.4      0.8       NA
+    ## 7 id_001  1995-04-23 Dora  <NA>          0.9      1.4     NA         NA
+    ## 8 id_001  1995-04-23 Berta <NA>          7.5     10.1      3         NA
+    ## 9 id_005  1995-04-23 Dora  string_3     NA       11.8     56.8       NA
     ## # ... with 1 more variable: priority <dbl>
 
 ### Aggregating the `data_dummy` dataframe
@@ -137,19 +142,16 @@ data_dummy %>%
   summarise_all(funs(first(na.omit(.))))
 ```
 
-    ## # A tibble: 9 x 9
-    ## # Groups:   proj_id [9]
+    ## # A tibble: 6 x 9
+    ## # Groups:   proj_id [5]
     ##   proj_id date       proj  column_a column_b column_c column_d column_f
     ##   <chr>   <date>     <chr> <chr>       <dbl>    <dbl>    <dbl>    <dbl>
-    ## 1 id_001  1995-04-23 Ampel string_0      0.7     NA       NA         53
-    ## 2 id_002  1995-04-24 Berta string_1      0.3     NA        0.8       NA
+    ## 1 id_001  1995-04-23 Dora  string_0      0.9      1.4      3         53
+    ## 2 id_002  1995-04-24 Chlor string_4      0.3      0.4      0.8       NA
     ## 3 id_003  1995-04-25 Chlor <NA>         NA       NA       NA         NA
     ## 4 id_004  1995-04-26 Dora  string_2     NA       NA       NA         NA
-    ## 5 id_005  1995-04-27 Farf~ string_3     NA       NA       NA         NA
-    ## 6 id_006  1995-04-24 Chlor string_4     NA        0.4      0.8       NA
-    ## 7 id_007  1995-04-23 Dora  <NA>          0.9      1.4     NA         NA
-    ## 8 id_008  1995-04-23 Berta <NA>          7.5     10.1      3         NA
-    ## 9 id_009  1995-04-23 Dora  string_3     NA       11.8     56.8       NA
+    ## 5 id_005  1995-04-23 Dora  string_3     NA       11.8     56.8       NA
+    ## 6 id_005  1995-04-27 Farf~ string_3     NA       NA       NA         NA
     ## # ... with 1 more variable: priority <dbl>
 
 This results in an aggregated dataframe, where cell values are chosen
