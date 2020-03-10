@@ -5,6 +5,30 @@ date: "10 März 2020"
 output: rmarkdown::github_document
 ---
 
+```{r, include=FALSE}
+purrr::map(
+  list.files(
+    path = './functions',
+    pattern = "\\.R$",
+    full.names = TRUE,
+    recursive = TRUE
+  ),
+  source
+)
+```
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(fig.align = "center")
+```
+
+```{r}
+library(sf)
+library(tidyverse)
+```
+
 # Libraries
 ```{r}
 library(tidyverse)
@@ -17,11 +41,89 @@ library(tidyverse)
 data_dummy <- read_csv2('../../raw_data/data_dummy.csv')
 ```
 
+Clean the column names
+```{r}
+data_dummy <- data_dummy %>% 
+  janitor::clean_names() %>% 
+  mutate(date = lubridate::dmy(date)) %>% 
+  mutate_at(c('column_b', 'column_c', 'column_d'), as.numeric)
+```
+
+
 Show the dataframe
 ```{r}
 data_dummy
 ```
 
+
+# Problem Definition
 The goal is to merge duplicates of rows. The criterion for duplicates is 
+
 * same `proj_id` value
 * same `date` value
+
+## Find Duplicates
+
+### Way 1 - Janitor
+```{r}
+data_dummy %>% 
+  janitor::get_dupes(proj_id, date)
+```
+
+### Way 2 - Dplyr
+Alternatively, same result
+```{r}
+data_dummy %>% 
+  group_by(proj_id, date) %>% 
+  filter(n() > 1) %>% 
+  arrange(proj_id)
+```
+
+# Aggregation
+
+## Method 1 - without prioritizing confidence
+
+This method simply chooses the maximum value of row duplicates.
+```{r}
+data_dummy %>% 
+  group_by(proj_id, date) %>% 
+  summarise_all(funs(max), na.rm = TRUE) %>% 
+  mutate_all(function(x) ifelse(x == -Inf, NA, x))
+```
+
+## Method 1 - with prioritizing confidence
+
+### `priority_key`
+
+In the following steps we define a dataframe containing priorities to each unique project
+```{r}
+priority_key <- data_dummy %>% 
+  distinct(proj)
+
+priority_key
+```
+
+Now we add values for the priorities
+```{r}
+priority_key <- priority_key %>% 
+  mutate(priority = c(5, 3, 1, 2, 4))
+```
+
+We join the 2 dataframes
+```{r}
+data_dummy <- data_dummy %>% 
+  left_join(priority_key)
+
+data_dummy
+```
+
+1. We group the dataframe depending on our duplicate criteria `proj_id` and `date`
+2. we sort them by priority
+3. and simply chose the first non `NA` value in each group
+```{r}
+data_dummy %>% 
+  group_by(proj_id, date) %>% 
+  arrange(priority) %>% 
+  summarise_all(funs(first(na.omit(.))))
+```
+
