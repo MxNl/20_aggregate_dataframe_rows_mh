@@ -1,0 +1,27 @@
+---
+title: "Unsupervised Aggregattion of Rows in large Dataframe"
+author: "Maximilian Nölscher"
+date: "10 März 2020"
+output: rmarkdown::github_document
+---
+
+# Libraries
+```{r}
+library(tidyverse)
+```
+
+
+# Data Import
+
+```{r}
+data_dummy <- read_csv2('../../raw_data/data_dummy.csv')
+```
+
+Show the dataframe
+```{r}
+data_dummy
+```
+
+The goal is to merge duplicates of rows. The criterion for duplicates is 
+* same `proj_id` value
+* same `date` value
