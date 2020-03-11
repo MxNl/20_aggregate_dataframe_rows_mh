@@ -142,7 +142,6 @@ Show the resulting dataframe. For comparison the dateframe containing the duplic
 ```{r}
 data_dummy_aggregated %>% 
   list(., data_dummy_duplicates) %>% 
-  knitr::kable("markdown") %>% 
-  kableExtra::kable_styling(full_width = TRUE)
+  knitr::kable("markdown")
 ```
 
