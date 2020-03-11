@@ -22,6 +22,8 @@ knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_chunk$set(warning = FALSE)
 knitr::opts_chunk$set(message = FALSE)
 knitr::opts_chunk$set(fig.align = "center")
+
+opts <- options(knitr.kable.NA = "")
 ```
 
 # Libraries
@@ -46,8 +48,9 @@ data_dummy <- data_dummy %>%
 
 
 Show the dataframe
-```{r}
-data_dummy
+```{r, out.width='100%'}
+data_dummy %>% 
+  knitr::kable("markdown")
 ```
 
 
@@ -61,8 +64,15 @@ The goal is to merge duplicates of rows. The criterion for duplicates is
 
 ### Way 1 - Janitor
 ```{r}
-data_dummy %>% 
-  janitor::get_dupes(proj_id, date)
+data_dummy_duplicates <- data_dummy %>% 
+  janitor::get_dupes(proj_id, date) %>% 
+  select(-dupe_count)
+```
+
+Show the resulting dataframe
+```{r}
+data_dummy_duplicates %>% 
+  knitr::kable("markdown")
 ```
 
 ```{r, include = FALSE}
@@ -83,8 +93,6 @@ In the following steps we define a dataframe containing priorities to each uniqu
 ```{r}
 priority_key <- data_dummy %>% 
   distinct(proj)
-
-priority_key
 ```
 
 Now we add values for the priorities
@@ -93,12 +101,22 @@ priority_key <- priority_key %>%
   mutate(priority = c(5, 3, 1, 2, 4))
 ```
 
+Show the resulting dataframe
+```{r}
+priority_key %>% 
+  knitr::kable("markdown")
+```
+
 We join the 2 dataframes
 ```{r}
 data_dummy <- data_dummy %>% 
-  left_join(priority_key)
+  left_join(priority_key, by = 'proj')
+```
 
-data_dummy
+Show the resulting dataframe
+```{r}
+data_dummy %>% 
+  knitr::kable("markdown")
 ```
 
 ### Aggregating the `data_dummy` dataframe
@@ -106,14 +124,24 @@ data_dummy
 1. We group the dataframe depending on our duplicate criteria `proj_id` and `date`
 2. we sort them by priority
 3. and simply chose the first non `NA` value in each group
+4. remove the column `priority`
 ```{r}
-data_dummy %>% 
+data_dummy_aggregated <- data_dummy %>% 
   group_by(proj_id, date) %>% 
   arrange(priority) %>% 
-  summarise_all(funs(first(na.omit(.))))
+  summarise_all(funs(first(na.omit(.)))) %>% 
+  select(-priority)
 ```
 
 This results in an aggregated dataframe, where cell values are chosen
 
 1. by prioritizing the source
 2. fill in the only availyble value in a column
+
+Show the resulting dataframe. For comparison the dateframe containing the duplicates is displayed below.
+```{r}
+data_dummy_aggregated %>% 
+  list(., data_dummy_duplicates) %>% 
+  knitr::kable("markdown")
+```
+
