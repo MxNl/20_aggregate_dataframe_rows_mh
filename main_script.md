@@ -167,7 +167,8 @@ Show the resulting dataframe. For comparison the dateframe containing the duplic
 ``` r
 data_dummy_aggregated %>% 
   list(., data_dummy_duplicates) %>% 
-  knitr::kable("markdown")
+  knitr::kable("markdown") %>% 
+  kableExtra::kable_styling(full_width = TRUE)
 ```
 
 | proj\_id | date       | proj     | column\_a |  column\_b|  column\_c|  column\_d|  column\_f|
