@@ -53,6 +53,20 @@ data_dummy %>%
   knitr::kable("markdown")
 ```
 
+## Get unique combination
+```{r}
+data_dummy %>% 
+  drop_na(column_b) %>% 
+  janitor::get_dupes(proj_id) %>% 
+  group_by(proj_id) %>% 
+  drop_na(date) %>% 
+  filter(date == min(date)) %>% 
+  ungroup() %>%
+  distinct(proj_id, column_b, .keep_all = TRUE) %>% 
+  knitr::kable("markdown")
+```
+
+
 
 # Problem Definition
 The goal is to merge duplicates of rows. The criterion for duplicates is 

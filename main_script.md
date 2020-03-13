@@ -44,6 +44,27 @@ data_dummy %>%
 | id\_001  | 1995-04-23 | Dora     |           |        0.9|        1.4|           |           |
 | id\_001  | 1995-04-23 | Berta    |           |        7.5|       10.1|       3.00|           |
 | id\_005  | 1995-04-23 | Dora     | string\_3 |           |       11.8|      56.80|           |
+| id\_001  | 1990-04-23 | Ampel    | string\_0 |        0.7|           |           |         53|
+| id\_001  | 1990-04-23 | Ampel    | string\_0 |        0.7|           |           |         53|
+
+Get unique combination
+----------------------
+
+``` r
+data_dummy %>% 
+  drop_na(column_b) %>% 
+  janitor::get_dupes(proj_id) %>% 
+  group_by(proj_id) %>% 
+  drop_na(date) %>% 
+  filter(date == min(date)) %>% 
+  ungroup() %>%
+  distinct(proj_id, column_b, .keep_all = TRUE) %>% 
+  knitr::kable("markdown")
+```
+
+| proj\_id |  dupe\_count| date       | proj  | column\_a |  column\_b|  column\_c|  column\_d|  column\_f|
+|:---------|------------:|:-----------|:------|:----------|----------:|----------:|----------:|----------:|
+| id\_001  |            5| 1990-04-23 | Ampel | string\_0 |        0.7|           |           |         53|
 
 Problem Definition
 ==================
@@ -73,6 +94,8 @@ data_dummy_duplicates %>%
 
 | proj\_id | date       | proj  | column\_a |  column\_b|  column\_c|  column\_d|  column\_f|
 |:---------|:-----------|:------|:----------|----------:|----------:|----------:|----------:|
+| id\_001  | 1990-04-23 | Ampel | string\_0 |        0.7|           |           |         53|
+| id\_001  | 1990-04-23 | Ampel | string\_0 |        0.7|           |           |         53|
 | id\_001  | 1995-04-23 | Ampel | string\_0 |        0.7|           |           |         53|
 | id\_001  | 1995-04-23 | Dora  |           |        0.9|        1.4|           |           |
 | id\_001  | 1995-04-23 | Berta |           |        7.5|       10.1|       3.00|           |
@@ -141,6 +164,8 @@ data_dummy %>%
 | id\_001  | 1995-04-23 | Dora     |           |        0.9|        1.4|           |           |         2|
 | id\_001  | 1995-04-23 | Berta    |           |        7.5|       10.1|       3.00|           |         3|
 | id\_005  | 1995-04-23 | Dora     | string\_3 |           |       11.8|      56.80|           |         2|
+| id\_001  | 1990-04-23 | Ampel    | string\_0 |        0.7|           |           |         53|         5|
+| id\_001  | 1990-04-23 | Ampel    | string\_0 |        0.7|           |           |         53|         5|
 
 ### Aggregating the `data_dummy` dataframe
 
@@ -172,6 +197,7 @@ data_dummy_aggregated %>%
 
 | proj\_id | date       | proj     | column\_a |  column\_b|  column\_c|  column\_d|  column\_f|
 |:---------|:-----------|:---------|:----------|----------:|----------:|----------:|----------:|
+| id\_001  | 1990-04-23 | Ampel    | string\_0 |        0.7|           |           |         53|
 | id\_001  | 1995-04-23 | Dora     | string\_0 |        0.9|        1.4|       3.00|         53|
 | id\_002  | 1995-04-24 | Chlor    | string\_4 |        0.3|        0.4|       0.95|           |
 | id\_003  | 1995-04-25 | Chlor    |           |           |           |           |           |
@@ -181,6 +207,8 @@ data_dummy_aggregated %>%
 
 | proj\_id | date       | proj  | column\_a |  column\_b|  column\_c|  column\_d|  column\_f|
 |:---------|:-----------|:------|:----------|----------:|----------:|----------:|----------:|
+| id\_001  | 1990-04-23 | Ampel | string\_0 |        0.7|           |           |         53|
+| id\_001  | 1990-04-23 | Ampel | string\_0 |        0.7|           |           |         53|
 | id\_001  | 1995-04-23 | Ampel | string\_0 |        0.7|           |           |         53|
 | id\_001  | 1995-04-23 | Dora  |           |        0.9|        1.4|           |           |
 | id\_001  | 1995-04-23 | Berta |           |        7.5|       10.1|       3.00|           |
