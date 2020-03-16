@@ -5,9 +5,11 @@ cus_fun_aggregate_columns_by_method <- function(df, priority_df, method_name, co
   # df <- data_dummy
   # priority_df <- priority_key
   # method_name <- 'mean'
-  # columns_to_group_by <- 'id'
+  # columns_to_group_by <- c('id', 'project')
   
   #############################
+  
+  number_of_grouping_columns <- columns_to_group_by %>% length()
   
   if (method_name == "mean") {
     
@@ -61,7 +63,7 @@ cus_fun_aggregate_columns_by_method <- function(df, priority_df, method_name, co
     
     return(data_dummy_aggregated)
     
-  } else if (method_name == "first") {
+  } else if (method_name == "first" & number_of_grouping_columns == 1) {
     
     columns_first <- priority_df %>%
       filter(apply_function == "first") %>%
@@ -86,6 +88,30 @@ cus_fun_aggregate_columns_by_method <- function(df, priority_df, method_name, co
       summarise_all(funs(first(na.omit(.)))) %>%
       pivot_wider(names_from = "name", values_from = "value1") %>%
       select(-value)
+    
+    return(data_dummy_aggregated)
+    
+  } else if (method_name == "first" & number_of_grouping_columns == 2) {
+    
+    columns_first <- priority_df %>%
+      filter(apply_function == "first") %>%
+      distinct(field) %>%
+      pull(field)
+    
+    priority_join <- priority_df %>%
+      filter(field %in% columns_first) %>%
+      pivot_wider(names_from = "field", values_from = "priority") %>%
+      rename_at(vars(-c("project", "apply_function")), str_c, "_prio")
+    
+    data_dummy_aggregated <- df %>%
+      left_join(priority_join, by = "project") %>%
+      select(id, project, matches(str_c(columns_first, collapse = "|"))) %>%
+      pivot_longer(cols = contains("prio")) %>%
+      group_by(id, project, name) %>%
+      arrange(value) %>%
+      summarise_all(funs(first(na.omit(.)))) %>%
+      pivot_wider(names_from = "name", values_from = "value") %>%
+      select(-contains("prio"))
     
     return(data_dummy_aggregated)
     

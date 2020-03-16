@@ -32,6 +32,7 @@ purrr::map(
     ## [[1]]$value
     ## function (df, priority_df, method_name, columns_to_group_by) 
     ## {
+    ##     number_of_grouping_columns <- columns_to_group_by %>% length()
     ##     if (method_name == "mean") {
     ##         columns_mean <- priority_df %>% filter(apply_function == 
     ##             method_name) %>% distinct(field) %>% pull(field)
@@ -58,7 +59,8 @@ purrr::map(
     ##             one_of(columns_max_char))
     ##         return(data_dummy_aggregated)
     ##     }
-    ##     else if (method_name == "first") {
+    ##     else if (method_name == "first" & number_of_grouping_columns == 
+    ##         1) {
     ##         columns_first <- priority_df %>% filter(apply_function == 
     ##             "first") %>% distinct(field) %>% pull(field)
     ##         priority_join <- priority_df %>% filter(field %in% columns_first) %>% 
@@ -75,6 +77,22 @@ purrr::map(
     ##             name)) %>% arrange(value) %>% summarise_all(funs(first(na.omit(.)))) %>% 
     ##             pivot_wider(names_from = "name", values_from = "value1") %>% 
     ##             select(-value)
+    ##         return(data_dummy_aggregated)
+    ##     }
+    ##     else if (method_name == "first" & number_of_grouping_columns == 
+    ##         2) {
+    ##         columns_first <- priority_df %>% filter(apply_function == 
+    ##             "first") %>% distinct(field) %>% pull(field)
+    ##         priority_join <- priority_df %>% filter(field %in% columns_first) %>% 
+    ##             pivot_wider(names_from = "field", values_from = "priority") %>% 
+    ##             rename_at(vars(-c("project", "apply_function")), 
+    ##                 str_c, "_prio")
+    ##         data_dummy_aggregated <- df %>% left_join(priority_join, 
+    ##             by = "project") %>% select(id, project, matches(str_c(columns_first, 
+    ##             collapse = "|"))) %>% pivot_longer(cols = contains("prio")) %>% 
+    ##             group_by(id, project, name) %>% arrange(value) %>% 
+    ##             summarise_all(funs(first(na.omit(.)))) %>% pivot_wider(names_from = "name", 
+    ##             values_from = "value") %>% select(-contains("prio"))
     ##         return(data_dummy_aggregated)
     ##     }
     ##     else if (method_name == "noclue") {
@@ -111,11 +129,11 @@ data_dummy %>%
 |   id| project | alang    |  bmean|  cmax|   dx|   ey|    f|
 |----:|:--------|:---------|------:|-----:|----:|----:|----:|
 |    1| y       | kurz     |     10|     5|    3|   17|    2|
-|    1| y       | kurz     |      3|    12|     |    3|   26|
+|    1| y       | langlang |      3|    12|     |    3|   26|
 |    1| x       | langlang |     20|     1|   13|    2|    5|
 |    2| y       | kurz     |     10|     5|    3|   24|     |
 |    2| y       | kurz     |       |    56|     |    3|     |
-|    2| x       | langlang |     20|     1|   10|    2|     |
+|    2| x       | kurz     |     20|     1|   10|    2|     |
 
 Import Priority Dataframe
 -------------------------
@@ -197,22 +215,22 @@ data_dummy_aggregated %>%
 |   id| alang    |  bmean|  cmax|   dx|   ey|    f|
 |----:|:---------|------:|-----:|----:|----:|----:|
 |    1| langlang |     11|    12|   13|   17|    2|
-|    2| langlang |     15|    56|   10|   24|     |
+|    2| kurz     |     15|    56|   10|   24|     |
 
 |   id| project | alang    |  bmean|  cmax|   dx|   ey|    f|
 |----:|:--------|:---------|------:|-----:|----:|----:|----:|
 |    1| y       | kurz     |     10|     5|    3|   17|    2|
-|    1| y       | kurz     |      3|    12|     |    3|   26|
+|    1| y       | langlang |      3|    12|     |    3|   26|
 |    1| x       | langlang |     20|     1|   13|    2|    5|
 |    2| y       | kurz     |     10|     5|    3|   24|     |
 |    2| y       | kurz     |       |    56|     |    3|     |
-|    2| x       | langlang |     20|     1|   10|    2|     |
+|    2| x       | kurz     |     20|     1|   10|    2|     |
 
 |   id| project | alang    |  bmean|  cmax|   dx|   ey|    f|
 |----:|:--------|:---------|------:|-----:|----:|----:|----:|
 |    1| y       | kurz     |     10|     5|    3|   17|    2|
-|    1| y       | kurz     |      3|    12|     |    3|   26|
+|    1| y       | langlang |      3|    12|     |    3|   26|
 |    1| x       | langlang |     20|     1|   13|    2|    5|
 |    2| y       | kurz     |     10|     5|    3|   24|     |
 |    2| y       | kurz     |       |    56|     |    3|     |
-|    2| x       | langlang |     20|     1|   10|    2|     |
+|    2| x       | kurz     |     20|     1|   10|    2|     |
