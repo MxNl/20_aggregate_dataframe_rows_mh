@@ -1,4 +1,13 @@
-cus_fun_aggregate_columns_by_method <- function(df, priority_df, method_name) {
+cus_fun_aggregate_columns_by_method <- function(df, priority_df, method_name, columns_to_group_by) {
+  
+  ############### Test ##########
+  
+  # df <- data_dummy
+  # priority_df <- priority_key
+  # method_name <- 'mean'
+  # columns_to_group_by <- 'id'
+  
+  #############################
   
   if (method_name == "mean") {
     
@@ -6,9 +15,9 @@ cus_fun_aggregate_columns_by_method <- function(df, priority_df, method_name) {
       filter(apply_function == method_name) %>%
       distinct(field) %>%
       pull(field)
-
+    
     data_dummy_aggregated <- df %>%
-      group_by(id, project) %>%
+      group_by_at(vars(one_of(columns_to_group_by))) %>% 
       summarise_at(
         .vars = vars(one_of(columns_mean)),
         .funs = mean,
@@ -23,9 +32,9 @@ cus_fun_aggregate_columns_by_method <- function(df, priority_df, method_name) {
       filter(apply_function == "max") %>%
       distinct(field) %>%
       pull(field)
-
+    
     data_dummy_aggregated <- df %>%
-      group_by(id, project) %>%
+      group_by_at(vars(one_of(columns_to_group_by))) %>% 
       summarise_at(
         .vars = vars(one_of(columns_max)),
         .funs = max,
@@ -45,10 +54,10 @@ cus_fun_aggregate_columns_by_method <- function(df, priority_df, method_name) {
       pull(field)
     
     data_dummy_aggregated <- df %>%
-      group_by(id, project) %>%
+      group_by_at(vars(one_of(columns_to_group_by))) %>% 
       filter(alang_lenght == max(alang_lenght, na.rm = TRUE)) %>%
       slice(1) %>%
-      select(id, project, one_of(columns_max_char))
+      select(one_of(columns_to_group_by), one_of(columns_max_char))
     
     return(data_dummy_aggregated)
     
@@ -66,13 +75,17 @@ cus_fun_aggregate_columns_by_method <- function(df, priority_df, method_name) {
     
     data_dummy_aggregated <- df %>%
       left_join(priority_join, by = "project") %>%
-      select(id, project, matches(str_c(columns_first, collapse = "|"))) %>%
+      select(one_of(columns_to_group_by), matches(str_c(columns_first, collapse = "|"))) %>%
       pivot_longer(cols = contains("prio")) %>%
-      group_by(id, project, name) %>%
+      pivot_longer(cols = c('dx', 'ey'), names_to = 'name1', values_to = 'value1') %>%
+      mutate(name = str_sub(name, 1, 2)) %>% 
+      filter(name == name1) %>% 
+      select(-name1) %>% 
+      group_by_at(vars(one_of(columns_to_group_by), name)) %>% 
       arrange(value) %>%
       summarise_all(funs(first(na.omit(.)))) %>%
-      pivot_wider(names_from = "name", values_from = "value") %>%
-      select(-contains("prio"))
+      pivot_wider(names_from = "name", values_from = "value1") %>%
+      select(-value)
     
     return(data_dummy_aggregated)
     
@@ -84,9 +97,9 @@ cus_fun_aggregate_columns_by_method <- function(df, priority_df, method_name) {
       pull(field)
     
     data_dummy_aggregated <- data_dummy %>% 
-      group_by(id, project) %>% 
+      group_by_at(vars(one_of(columns_to_group_by))) %>% 
       summarise_all(funs(first(na.omit(.)))) %>% 
-      select(id, project, one_of(columns_noclue))
+      select(one_of(columns_to_group_by), one_of(columns_noclue))
     
     return(data_dummy_aggregated)
     

@@ -67,9 +67,12 @@ priority_key %>%
 
 Show all duplicates
 ```{r}
+columns_to_group_by <- c('id')
+
 data_dummy_duplicates <- data_dummy %>% 
-  janitor::get_dupes(id, project) %>% 
-  select(-dupe_count)
+  group_by_at(vars(one_of(columns_to_group_by))) %>% 
+  filter(n() > 1) %>% 
+  arrange(id)
 ```
 
 
@@ -84,13 +87,16 @@ method_list <- priority_key %>%
 Apply each aggregation method to the defined subset of columns
 ```{r}
 df_list <- method_list %>% 
-  map(~cus_fun_aggregate_columns_by_method(data_dummy, priority_key, .))
+  map(~cus_fun_aggregate_columns_by_method(df = data_dummy, 
+                                           priority_df = priority_key,
+                                           method_name = ., 
+                                           columns_to_group_by = columns_to_group_by))
 ```
 
 Join the individual dataframes into one
 ```{r}
 data_dummy_aggregated <- df_list %>% 
-  reduce(inner_join, by = c('id', 'project'))
+  reduce(inner_join, by = columns_to_group_by)
 ```
 
 ```{r}
