@@ -30,12 +30,13 @@ purrr::map(
 
     ## [[1]]
     ## [[1]]$value
-    ## function (df, priority_df, method_name) 
+    ## function (df, priority_df, method_name, columns_to_group_by) 
     ## {
+    ##     number_of_grouping_columns <- columns_to_group_by %>% length()
     ##     if (method_name == "mean") {
     ##         columns_mean <- priority_df %>% filter(apply_function == 
     ##             method_name) %>% distinct(field) %>% pull(field)
-    ##         data_dummy_aggregated <- df %>% group_by(id, project) %>% 
+    ##         data_dummy_aggregated <- df %>% group_by_at(vars(one_of(columns_to_group_by))) %>% 
     ##             summarise_at(.vars = vars(one_of(columns_mean)), 
     ##                 .funs = mean, na.rm = TRUE)
     ##         return(data_dummy_aggregated)
@@ -43,7 +44,7 @@ purrr::map(
     ##     else if (method_name == "max") {
     ##         columns_max <- priority_df %>% filter(apply_function == 
     ##             "max") %>% distinct(field) %>% pull(field)
-    ##         data_dummy_aggregated <- df %>% group_by(id, project) %>% 
+    ##         data_dummy_aggregated <- df %>% group_by_at(vars(one_of(columns_to_group_by))) %>% 
     ##             summarise_at(.vars = vars(one_of(columns_max)), .funs = max, 
     ##                 na.rm = TRUE)
     ##         return(data_dummy_aggregated)
@@ -52,12 +53,34 @@ purrr::map(
     ##         df <- df %>% mutate(alang_lenght = str_length(alang))
     ##         columns_max_char <- priority_df %>% filter(apply_function == 
     ##             "max char") %>% distinct(field) %>% pull(field)
-    ##         data_dummy_aggregated <- df %>% group_by(id, project) %>% 
+    ##         data_dummy_aggregated <- df %>% group_by_at(vars(one_of(columns_to_group_by))) %>% 
     ##             filter(alang_lenght == max(alang_lenght, na.rm = TRUE)) %>% 
-    ##             slice(1) %>% select(id, project, one_of(columns_max_char))
+    ##             slice(1) %>% select(one_of(columns_to_group_by), 
+    ##             one_of(columns_max_char))
     ##         return(data_dummy_aggregated)
     ##     }
-    ##     else if (method_name == "first") {
+    ##     else if (method_name == "first" & number_of_grouping_columns == 
+    ##         1) {
+    ##         columns_first <- priority_df %>% filter(apply_function == 
+    ##             "first") %>% distinct(field) %>% pull(field)
+    ##         priority_join <- priority_df %>% filter(field %in% columns_first) %>% 
+    ##             pivot_wider(names_from = "field", values_from = "priority") %>% 
+    ##             rename_at(vars(-c("project", "apply_function")), 
+    ##                 str_c, "_prio")
+    ##         data_dummy_aggregated <- df %>% left_join(priority_join, 
+    ##             by = "project") %>% select(one_of(columns_to_group_by), 
+    ##             matches(str_c(columns_first, collapse = "|"))) %>% 
+    ##             pivot_longer(cols = contains("prio")) %>% pivot_longer(cols = c("dx", 
+    ##             "ey"), names_to = "name1", values_to = "value1") %>% 
+    ##             mutate(name = str_sub(name, 1, 2)) %>% filter(name == 
+    ##             name1) %>% select(-name1) %>% group_by_at(vars(one_of(columns_to_group_by), 
+    ##             name)) %>% arrange(value) %>% summarise_all(funs(first(na.omit(.)))) %>% 
+    ##             pivot_wider(names_from = "name", values_from = "value1") %>% 
+    ##             select(-value)
+    ##         return(data_dummy_aggregated)
+    ##     }
+    ##     else if (method_name == "first" & number_of_grouping_columns == 
+    ##         2) {
     ##         columns_first <- priority_df %>% filter(apply_function == 
     ##             "first") %>% distinct(field) %>% pull(field)
     ##         priority_join <- priority_df %>% filter(field %in% columns_first) %>% 
@@ -75,9 +98,9 @@ purrr::map(
     ##     else if (method_name == "noclue") {
     ##         columns_noclue <- priority_df %>% filter(apply_function == 
     ##             "noclue") %>% distinct(field) %>% pull(field)
-    ##         data_dummy_aggregated <- data_dummy %>% group_by(id, 
-    ##             project) %>% summarise_all(funs(first(na.omit(.)))) %>% 
-    ##             select(id, project, one_of(columns_noclue))
+    ##         data_dummy_aggregated <- data_dummy %>% group_by_at(vars(one_of(columns_to_group_by))) %>% 
+    ##             summarise_all(funs(first(na.omit(.)))) %>% select(one_of(columns_to_group_by), 
+    ##             one_of(columns_noclue))
     ##         return(data_dummy_aggregated)
     ##     }
     ## }
@@ -105,12 +128,12 @@ data_dummy %>%
 
 |   id| project | alang    |  bmean|  cmax|   dx|   ey|    f|
 |----:|:--------|:---------|------:|-----:|----:|----:|----:|
-|    1| y       | kurz     |     10|     5|    3|   10|    2|
-|    1| x       | kurz     |       |    10|     |    3|   10|
-|    1| y       | langlang |     20|     1|   10|    2|    5|
-|    2| y       | kurz     |     10|     5|    3|   10|     |
-|    2| y       | kurz     |       |    10|     |    3|     |
-|    2| x       | langlang |     20|     1|   10|    2|     |
+|    1| y       | kurz     |     10|     5|    3|   17|    2|
+|    1| y       | langlang |      3|    12|     |    3|   26|
+|    1| x       | langlang |     20|     1|   13|    2|    5|
+|    2| y       | kurz     |     10|     5|    3|   24|     |
+|    2| y       | kurz     |       |    56|     |    3|     |
+|    2| x       | kurz     |     20|     1|   10|    2|     |
 
 Import Priority Dataframe
 -------------------------
@@ -148,9 +171,12 @@ Processing
 Show all duplicates
 
 ``` r
+columns_to_group_by <- c('id')
+
 data_dummy_duplicates <- data_dummy %>% 
-  janitor::get_dupes(id, project) %>% 
-  select(-dupe_count)
+  group_by_at(vars(one_of(columns_to_group_by))) %>% 
+  filter(n() > 1) %>% 
+  arrange(id)
 ```
 
 List all functions
@@ -165,14 +191,17 @@ Apply each aggregation method to the defined subset of columns
 
 ``` r
 df_list <- method_list %>% 
-  map(~cus_fun_aggregate_columns_by_method(data_dummy, priority_key, .))
+  map(~cus_fun_aggregate_columns_by_method(df = data_dummy, 
+                                           priority_df = priority_key,
+                                           method_name = ., 
+                                           columns_to_group_by = columns_to_group_by))
 ```
 
 Join the individual dataframes into one
 
 ``` r
 data_dummy_aggregated <- df_list %>% 
-  reduce(inner_join, by = c('id', 'project'))
+  reduce(inner_join, by = columns_to_group_by)
 ```
 
 ``` r
@@ -183,25 +212,25 @@ data_dummy_aggregated %>%
   knitr::kable("markdown")
 ```
 
-|   id| project | alang    |  bmean|  cmax|   dx|   ey|    f|
-|----:|:--------|:---------|------:|-----:|----:|----:|----:|
-|    1| x       | kurz     |       |    10|     |    3|   10|
-|    1| y       | langlang |     15|     5|    3|   10|    2|
-|    2| x       | langlang |     20|     1|   10|    2|     |
-|    2| y       | kurz     |     10|    10|    3|   10|     |
+|   id| alang    |  bmean|  cmax|   dx|   ey|    f|
+|----:|:---------|------:|-----:|----:|----:|----:|
+|    1| langlang |     11|    12|   13|   17|    2|
+|    2| kurz     |     15|    56|   10|   24|     |
 
 |   id| project | alang    |  bmean|  cmax|   dx|   ey|    f|
 |----:|:--------|:---------|------:|-----:|----:|----:|----:|
-|    1| y       | kurz     |     10|     5|    3|   10|    2|
-|    1| y       | langlang |     20|     1|   10|    2|    5|
-|    2| y       | kurz     |     10|     5|    3|   10|     |
-|    2| y       | kurz     |       |    10|     |    3|     |
+|    1| y       | kurz     |     10|     5|    3|   17|    2|
+|    1| y       | langlang |      3|    12|     |    3|   26|
+|    1| x       | langlang |     20|     1|   13|    2|    5|
+|    2| y       | kurz     |     10|     5|    3|   24|     |
+|    2| y       | kurz     |       |    56|     |    3|     |
+|    2| x       | kurz     |     20|     1|   10|    2|     |
 
 |   id| project | alang    |  bmean|  cmax|   dx|   ey|    f|
 |----:|:--------|:---------|------:|-----:|----:|----:|----:|
-|    1| y       | kurz     |     10|     5|    3|   10|    2|
-|    1| x       | kurz     |       |    10|     |    3|   10|
-|    1| y       | langlang |     20|     1|   10|    2|    5|
-|    2| y       | kurz     |     10|     5|    3|   10|     |
-|    2| y       | kurz     |       |    10|     |    3|     |
-|    2| x       | langlang |     20|     1|   10|    2|     |
+|    1| y       | kurz     |     10|     5|    3|   17|    2|
+|    1| y       | langlang |      3|    12|     |    3|   26|
+|    1| x       | langlang |     20|     1|   13|    2|    5|
+|    2| y       | kurz     |     10|     5|    3|   24|     |
+|    2| y       | kurz     |       |    56|     |    3|     |
+|    2| x       | kurz     |     20|     1|   10|    2|     |
