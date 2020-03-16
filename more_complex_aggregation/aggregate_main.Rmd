@@ -95,7 +95,9 @@ data_dummy_aggregated <- df_list %>%
 
 ```{r}
 data_dummy_aggregated %>% 
-  list(., data_dummy_duplicates) %>% 
+  list(., 
+       data_dummy_duplicates, 
+       data_dummy) %>% 
   knitr::kable("markdown")
 ```
 

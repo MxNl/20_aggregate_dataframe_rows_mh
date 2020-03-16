@@ -177,7 +177,9 @@ data_dummy_aggregated <- df_list %>%
 
 ``` r
 data_dummy_aggregated %>% 
-  list(., data_dummy_duplicates) %>% 
+  list(., 
+       data_dummy_duplicates, 
+       data_dummy) %>% 
   knitr::kable("markdown")
 ```
 
@@ -194,3 +196,12 @@ data_dummy_aggregated %>%
 |    1| y       | langlang |     20|     1|   10|    2|    5|
 |    2| y       | kurz     |     10|     5|    3|   10|     |
 |    2| y       | kurz     |       |    10|     |    3|     |
+
+|   id| project | alang    |  bmean|  cmax|   dx|   ey|    f|
+|----:|:--------|:---------|------:|-----:|----:|----:|----:|
+|    1| y       | kurz     |     10|     5|    3|   10|    2|
+|    1| x       | kurz     |       |    10|     |    3|   10|
+|    1| y       | langlang |     20|     1|   10|    2|    5|
+|    2| y       | kurz     |     10|     5|    3|   10|     |
+|    2| y       | kurz     |       |    10|     |    3|     |
+|    2| x       | langlang |     20|     1|   10|    2|     |
