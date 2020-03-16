@@ -1,0 +1,13 @@
+field;project;apply_function;priority
+Alang;x;max char;1
+Alang;y;max char;1
+Bmean;x;mean;1
+Bmean;y;mean;1
+Cmax;x;max;1
+Cmax;y;max;1
+Dx;x;first;1
+Dx;y;first;2
+Ey;x;first;2
+Ey;y;first;1
+F;x;noclue;1
+F;y;noclue;1

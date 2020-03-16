@@ -1,0 +1,103 @@
+---
+title: "Unsupervised Aggregattion of Rows in Large Dataframe 2"
+author: "Maximilian Nölscher"
+date: "16 März 2020"
+output: rmarkdown::github_document
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(fig.align = "center")
+
+opts <- options(knitr.kable.NA = "")
+```
+
+# Presettings
+
+## Load Packages
+```{r}
+library(tidyverse)
+```
+
+## Load Custom Functions
+```{r}
+purrr::map(
+  list.files(
+    path = './functions/',
+    pattern = "\\.R$",
+    full.names = TRUE,
+    recursive = TRUE
+  ),
+  source
+)
+```
+
+
+# Data Import
+
+## Dataframe to Be Aggregated
+
+```{r}
+data_dummy <- read_csv2('../raw_data/dummy2.csv') %>% 
+  janitor::clean_names()
+```
+
+Show the dataframe
+```{r, out.width='100%'}
+data_dummy %>% 
+  knitr::kable("markdown")
+```
+
+## Import Priority Dataframe
+
+```{r}
+priority_key <- read_csv2('../raw_data/dummy_priority.csv') %>% 
+  mutate(field = str_to_lower(field))
+```
+
+Show the dataframe
+```{r, out.width='100%'}
+priority_key %>% 
+  knitr::kable("markdown")
+```
+
+# Processing
+
+Show all duplicates
+```{r}
+data_dummy_duplicates <- data_dummy %>% 
+  janitor::get_dupes(id, project) %>% 
+  select(-dupe_count)
+```
+
+
+List all functions
+
+```{r}
+method_list <- priority_key %>% 
+  distinct(apply_function) %>% 
+  pull(apply_function)
+```
+
+Apply each aggregation method to the defined subset of columns
+```{r}
+df_list <- method_list %>% 
+  map(~cus_fun_aggregate_columns_by_method(data_dummy, priority_key, .))
+```
+
+Join the individual dataframes into one
+```{r}
+data_dummy_aggregated <- df_list %>% 
+  reduce(inner_join, by = c('id', 'project'))
+```
+
+```{r}
+data_dummy_aggregated %>% 
+  list(., data_dummy_duplicates) %>% 
+  knitr::kable("markdown")
+```
+
+
+
